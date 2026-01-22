@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Churn Predictor | Анализ оттока</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-grad: linear-gradient(45deg, #0052D4, #4364F7);
+            --bg-grad: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%);
+        }
+
+        body {
+            background: var(--bg-grad);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .main-card {
+            border: none;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+        }
+
+        h2 {
+            color: #1a2a3a;
+            font-weight: 800;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #455a64;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 1.5px solid #dce4ec;
+            padding: 12px 15px;
+            transition: all 0.2s ease-in-out;
+            background-color: white;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #4364F7;
+            box-shadow: 0 0 0 4px rgba(67, 100, 247, 0.1);
+            outline: none;
+        }
+
+        .btn-predict {
+            background: var(--primary-grad);
+            border: none;
+            color: white;
+            font-weight: 700;
+            padding: 16px;
+            border-radius: 14px;
+            width: 100%;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(67, 100, 247, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .result-box {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 18px;
+            text-align: center;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border: none;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-danger { background-color: #ffeef0; color: #d63031; border-left: 5px solid #d63031; }
+        .alert-success { background-color: #e6fffa; color: #00b894; border-left: 5px solid #00b894; }
+
+        .form-check-input:checked {
+            background-color: #4364F7;
+            border-color: #4364F7;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-xl-9 col-lg-10">
+            <div class="main-card">
+                <h2 class="text-center">🏦 Анализ риска оттока клиента</h2>
+
+                <form action="/predict" method="post">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Кредитный рейтинг</label>
+                            <input type="number" name="credit_score" class="form-control" placeholder="300-850" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Страна</label>
+                            <select name="geography" class="form-select">
+                                <option value="France">Франция</option>
+                                <option value="Germany">Германия</option>
+                                <option value="Spain">Испания</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Пол</label>
+                            <select name="gender" class="form-select">
+                                <option value="Male">Мужчина</option>
+                                <option value="Female">Женщина</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Возраст</label>
+                            <input type="number" name="age" class="form-control" placeholder="Лет" required>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Срок (Tenure)</label>
+                            <input type="number" name="tenure" class="form-control" placeholder="Лет в банке" required>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Баланс ($)</label>
+                            <input type="number" step="0.01" name="balance" class="form-control" placeholder="0.00" required>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Кол-во продуктов</label>
+                            <input type="number" name="num_of_products" class="form-control" value="1" min="1" max="4">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Зарплата ($)</label>
+                            <input type="number" step="0.01" name="estimated_salary" class="form-control" placeholder="Доход в месяц" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Тип карты</label>
+                            <select name="card_type" class="form-select">
+                                <option value="DIAMOND">Diamond</option>
+                                <option value="PLATINUM">Platinum</option>
+                                <option value="GOLD">Gold</option>
+                                <option value="SILVER">Silver</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Баллы лояльности (Points)</label>
+                            <input type="number" name="point_earned" class="form-control" placeholder="Напр: 450" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Удовлетворенность (1-5)</label>
+                            <select name="satisfaction_score" class="form-select">
+                                <option value="1">1 — Очень плохо</option>
+                                <option value="2">2 — Плохо</option>
+                                <option value="3" selected>3 — Средне</option>
+                                <option value="4">4 — Хорошо</option>
+                                <option value="5">5 — Отлично</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check form-switch p-3 border rounded-3 bg-light">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" name="has_cr_card" value="1" id="crCard">
+                                <label class="form-check-label" for="crCard">Есть кредитная карта</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check form-switch p-3 border rounded-3 bg-light">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" name="is_active_member" value="1" id="active">
+                                <label class="form-check-label" for="active">Активный клиент</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-predict">ЗАПУСТИТЬ ПРОГНОЗ МОДЕЛИ</button>
+                        </div>
+                    </div>
+                </form>
+
+                {% if prediction_text %}
+                <div class="result-box {% if 'уйти' in prediction_text.lower() %}alert-danger{% else %}alert-success{% endif %}">
+                    {{ prediction_text }}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+.venv/
+.idea/
+*.csv
+*.pkl
+*.exe
+build/
+dist/
