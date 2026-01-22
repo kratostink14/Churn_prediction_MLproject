@@ -136,28 +136,6 @@ metrics_df = pd.DataFrame({
     'Модель v2 (без Complain)': [f"{accuracy2*100:.2f}%", f"{roc_auc2*100:.2f}"]
 })
 
-# Создание shap значений
-explainer = shap.TreeExplainer(ch_modelv2)
-shap_values = explainer.shap_values(x_test2, check_additivity=False)
-
-# ИСПРАВЛЕНИЕ: Проверяем, в каком формате вернулись значения
-# Если это список (как в старых версиях), берем индекс 1 (отток)
-if isinstance(shap_values, list):
-    shap_to_plot = shap_values[1]
-# Если это массив с 3 измерениями (как в некоторых новых версиях), берем срез для класса 1
-elif len(shap_values.shape) == 3:
-    shap_to_plot = shap_values[:, :, 1]
-# Если это уже готовая матрица (2 измерения), используем как есть
-else:
-    shap_to_plot = shap_values
-
-# Визуал
-plt.figure(figsize=(15, 12))
-shap.summary_plot(shap_to_plot, x_test2, show=False, plot_type="bar")
-plt.title('Влияние каждого признака НА ОТТОК (Модель без Complain)')
-plt.savefig('shap_values.png')
-plt.show()
-
 # Вывод
 print("Сравнительная таблица метрик качества моделей:")
 print(metrics_df)
